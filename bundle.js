@@ -430,16 +430,14 @@ if (content.locals) {
 __webpack_require__(/*! ../css/style.css */ "./src/palette/css/style.css");
 
 var flags = {
-  fillBucket: false,
+  paint_bucket: false,
   chooseColor: false,
   pencil: true,
   transform: false
-}; /* eslint-disable no-loop-func */
-/* eslint-disable no-undef */
+};
 
-
-var sizePicture = { size: 512 };
-
+var SIZE_PICTURE = { size: 512 };
+var STYLE_ELEMENT = 'color:red;font-weight: bold';
 var KEY_TOOLS_MAP = {
   KeyB: {
     id: 'paint_bucket'
@@ -451,18 +449,38 @@ var KEY_TOOLS_MAP = {
     id: 'choose_color'
   }
 };
+var MAIN_COLOR = {
+  RED: '#F74141',
+  BLUE: '#41B6F7'
+};
 
 var canvas = document.getElementById('canvas');
-canvas.width = sizePicture.size;
-canvas.height = sizePicture.size;
+var colorElement = void 0;
+canvas.width = SIZE_PICTURE.size;
+canvas.height = SIZE_PICTURE.size;
 var context = canvas.getContext('2d');
 var currentColor = '#008000';
 var colorTemp = '#008000';
-var previvousColor = '';
+var previousColor = '';
 var picData = new Image();
 picData.crossOrigin = 'anonymous';
 
-document.getElementById('buttom_click').addEventListener('click', function () {
+function sizeImage() {
+  canvas.width = SIZE_PICTURE.size;
+  canvas.height = SIZE_PICTURE.size;
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (canvas.getContext) {
+    if (picData.width < picData.height) {
+      ctx.drawImage(picData, (SIZE_PICTURE.size - picData.width * SIZE_PICTURE.size / picData.height) / 2, 0, picData.width * SIZE_PICTURE.size / picData.height, SIZE_PICTURE.size);
+    }
+    if (picData.width > picData.height) {
+      ctx.drawImage(picData, 0, (SIZE_PICTURE.size - picData.height * SIZE_PICTURE.size / picData.width) / 2, SIZE_PICTURE.size, picData.height * SIZE_PICTURE.size / picData.width);
+    }
+  };
+}
+
+document.getElementById('buttom_click').addEventListener('click', function drawPicture() {
   var city = document.getElementById('txt_in').value;
   var url = 'https://cors-anywhere.herokuapp.com/https://api.unsplash.com/photos/random?query=' + city + '&client_id=5f2288f31636f57621fb805baab3ad8e1069f7ba6d83dfb70c37edde41a0bf19';
   fetch(url).then(function (res) {
@@ -473,36 +491,16 @@ document.getElementById('buttom_click').addEventListener('click', function () {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       picData.src = data.urls.small;
       picData.onload = function () {
-        if (picData.width < picData.height) {
-          ctx.drawImage(picData, (sizePicture.size - picData.width * sizePicture.size / picData.height) / 2, 0, picData.width * sizePicture.size / picData.height, sizePicture.size);
-        }
-        if (picData.width > picData.height) {
-          ctx.drawImage(picData, 0, (sizePicture.size - picData.height * sizePicture.size / picData.width) / 2, sizePicture.size, picData.height * sizePicture.size / picData.width);
-        }
+        sizeImage();
       };
     }
   });
 });
 
-document.getElementById('buttom_white_black').addEventListener('click', function () {
-  var pic = new Image();
-  pic.crossOrigin = 'anonymous';
-  var ctx = canvas.getContext('2d');
-  pic.src = picData.src;
-  pic.onload = function () {
-    drawGray();
-  };
-});
-
-function saveCanvasState() {
-  localStorage.setItem('canvasState', this.canvas.toDataURL());
-}
-
 function drawGray() {
   var ctx = canvas.getContext('2d');
   var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   var data = imageData.data;
-
 
   var grayscale = function grayscale() {
     for (var i = 0; i < data.length; i += 4) {
@@ -516,172 +514,123 @@ function drawGray() {
   grayscale();
 }
 
-canvas.onmouseup = function (event) {
-  if (flags.pencil === true) {
-    canvas.onclick = function (event) {
-      var x = Math.floor(event.offsetX / 4);
-      var y = Math.floor(event.offsetY / 4);
+document.getElementById('buttom_white_black').addEventListener('click', function () {
+  var pic = new Image();
+  pic.crossOrigin = 'anonymous';
+  pic.src = picData.src;
+  pic.onload = function () {
+    drawGray();
+  };
+});
+
+canvas.addEventListener("mouseup", function () {
+  canvas.addEventListener("click", function (e) {
+    if (flags.pencil === true) {
+      var x = Math.floor(e.offsetX / 4);
+      var y = Math.floor(e.offsetY / 4);
       context.fillStyle = currentColor;
       context.fillRect(x * 4, y * 4, 4, 4);
       context.fill();
-    };
-  }
-  if (flags.fillBucket === true) {
-    canvas.onclick = function () {
+    }
+
+    if (flags.paint_bucket === true) {
       context.fillStyle = currentColor;
       context.fillRect(0, 0, 512, 512);
-    };
-  }
-};
+    }
+  });
+});
 
 function changeColor(element) {
-  if (element === 'color_bleu') {
-    currentColor = '#41B6F7';
+  function getColorCurrent() {
     document.querySelector('#input_color').style.background = currentColor;
     document.querySelector('#input_color').value = currentColor;
-    previvousColor = colorTemp;
-    document.querySelector('#color_pref').style.background = previvousColor;
-    colorTemp = currentColor;
-  } else if (element === 'color_red') {
-    currentColor = '#F74141';
-
-    document.querySelector('#input_color').style.background = currentColor;
-    document.querySelector('#input_color').value = currentColor;
-    previvousColor = colorTemp;
-    document.querySelector('#color_pref').style.background = previvousColor;
+    previousColor = colorTemp;
+    document.querySelector('#color_pref').style.background = previousColor;
     colorTemp = currentColor;
   }
+  if (colorElement !== element) {
+    if (element === 'color_bleu') {
+      currentColor = MAIN_COLOR.BLUE;
+      getColorCurrent();
+      colorTemp = currentColor;
+    } else if (element === 'color_red') {
+      currentColor = MAIN_COLOR.RED;
+      getColorCurrent();
+    } else if (element === 'color_pref') {
+      currentColor = previousColor;
+      getColorCurrent();
+    }
+    colorElement = element;
+  }
 }
-
-var toolsAll = document.getElementsByClassName('tool-item');
-for (var j = 0; j < toolsAll.length; j++) {
-  toolsAll[j].addEventListener('click', function (event) {
-    document.querySelectorAll('.tool-item').forEach(function (element) {
-      element.style.cssText = "none";
-    });
-    switch (event.target.id) {
-      case 'paint_bucket':
-        flags.fillBucket = true;
-        flags.pencil = false;
-        flags.chooseColor = false;
-        flags.transform = false;
-        document.querySelector('.paint_bucket').style.cssText = 'color:red;font-weight: bold';
-        changeColor(event.target.id);
-        break;
-      case 'choose_color':
-        flags.fillBucket = false;
-        flags.pencil = false;
-        flags.chooseColor = true;
-        flags.transform = false;
-        document.querySelector('.choose_color').style.cssText = 'color:red;font-weight: bold';
-        changeColor(event.target.id);
-        break;
-      case 'transform':
-        flags.fillBucket = false;
-        flags.pencil = false;
-        flags.chooseColor = false;
-        flags.transform = true;
-        document.querySelector('.transform').style.cssText = 'color:red;font-weight: bold';
-        changeColor(event.target.id);
-        break;
-      case 'pencil':
-        flags.fillBucket = false;
-        flags.pencil = true;
-        flags.chooseColor = false;
-        flags.transform = false;
-        document.querySelector('.pencil').style.cssText = 'color:red;font-weight: bold';
-        changeColor(event.target.id);
-        break;
+document.querySelector('.pencil').style.cssText = STYLE_ELEMENT;
+document.getElementById('tool').addEventListener('click', function (event) {
+  document.querySelectorAll('.tool-item').forEach(function (element) {
+    element.style.cssText = "none";
+  });
+  document.querySelector('.' + event.target.id).style.cssText = STYLE_ELEMENT;
+  Object.keys(flags).forEach(function (key) {
+    if (key === event.target.id) {
+      flags[key] = true;
+    } else {
+      flags[key] = false;
     }
   });
-}
+});
 
-var sizeTool = document.getElementsByClassName('checkbox_visible');
-for (var _j = 0; _j < sizeTool.length; _j += 1) {
-  sizeTool[_j].addEventListener('click', function (event) {
-    document.querySelectorAll('.checkbox_visible').forEach(function (element) {
-      var elCheck = element;
-      elCheck.style.background = 'none';
-    });
-    switch (event.target.value) {
-      case '1':
-        sizePicture.size = 128;
-        sizeImage();
-        break;
-      case '2':
-        sizePicture.size = 256;
-        sizeImage();
-        break;
-      case '3':
-        sizePicture.size = 512;
-        sizeImage();
-        break;
-      default:
-    }
+document.getElementById('size').addEventListener('click', function (event) {
+  document.querySelectorAll('.checkbox_visible').forEach(function (element) {
+    var elCheck = element;
+    elCheck.style.background = 'none';
   });
-}
+  switch (event.target.value) {
+    case '1':
+      SIZE_PICTURE.size = 128;
+      sizeImage();
+      break;
+    case '2':
+      SIZE_PICTURE.size = 256;
+      sizeImage();
+      break;
+    case '3':
+      SIZE_PICTURE.size = 512;
+      sizeImage();
+      break;
+    default:
+  }
+});
 
-function sizeImage() {
-  canvas.width = sizePicture.size;
-  canvas.height = sizePicture.size;
-  var ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (canvas.getContext) {
-    if (picData.width < picData.height) {
-      ctx.drawImage(picData, (sizePicture.size - picData.width * sizePicture.size / picData.height) / 2, 0, picData.width * sizePicture.size / picData.height, sizePicture.size);
-    }
-    if (picData.width > picData.height) {
-      ctx.drawImage(picData, 0, (sizePicture.size - picData.height * sizePicture.size / picData.width) / 2, sizePicture.size, picData.height * sizePicture.size / picData.width);
-    }
-  };
-}
-
-function setCurrentColor() {
-  currentColor = previvousColor;
-}
-
-var toolsColors = document.getElementsByClassName('color-item');
-for (var i = 0; i < toolsColors.length; i += 1) {
-  toolsColors[i].addEventListener('click', function (event) {
-    document.querySelectorAll('.color-item').forEach(function (element) {
-      element.style.cssText = "none";
-    });
-    switch (event.target.id) {
-
-      case 'input_color':
-        document.querySelector('.color_backgr-input').style.cssText = 'color:red;font-weight: bold';
-        break;
-
-      case 'color-pref_text':
-        currentColor = previvousColor;
-        document.querySelector('.color_backgr-prev').style.cssText = 'color:red;font-weight: bold';
-        break;
-
-      case 'color-red_text':
-        document.querySelector('.color_backgr-red').style.cssText = 'color:red;font-weight: bold';
-        changeColor('color_red');
-        break;
-      case 'color-bleu_text':
-        document.querySelector('.color_backgr-bleu').style.cssText = 'color:red;font-weight: bold';
-        changeColor('color_bleu');
-
-        break;
-    }
+document.getElementById('color').addEventListener('click', function (event) {
+  document.querySelectorAll('.color-item').forEach(function (element) {
+    element.style.cssText = "none";
   });
-}
+  if (event.target.id === 'color_pref_text') {
+    document.querySelector('.color_background-prev').style.cssText = STYLE_ELEMENT;
+    changeColor('color_pref');
+    currentColor = previousColor;
+  } else if (event.target.id === 'color_red_text') {
+    document.querySelector('.color_background-red').style.cssText = STYLE_ELEMENT;
+    changeColor('color_red');
+  } else if (event.target.id === 'color_bleu_text') {
+    document.querySelector('.color_background-bleu').style.cssText = STYLE_ELEMENT;
+    changeColor('color_bleu');
+  } else if (event.target.id === 'input_color') {
+    document.querySelector('.color_background-input').style.cssText = STYLE_ELEMENT;
+  }
+});
 
 var colorInput = document.querySelector('#input_color');
 colorInput.addEventListener('change', function () {
   currentColor = colorInput.value;
   document.querySelector('#input_color').style.background = currentColor;
-  previvousColor = colorTemp;
-  document.querySelector('#color_pref').style.background = previvousColor;
+  previousColor = colorTemp;
+  document.querySelector('#color_pref').style.background = previousColor;
   colorTemp = currentColor;
 });
 
 document.addEventListener('keydown', function (event) {
   if (KEY_TOOLS_MAP[event.code]) {
-    document.getElementById(KEY_TOOLS_MAP[event.code]).click();
+    document.getElementById(KEY_TOOLS_MAP[event.code].id).click();
   }
 });
 

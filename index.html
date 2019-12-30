@@ -24,31 +24,31 @@
         <button id="buttom_white_black">B&W</button>
     </div>
     <main class="main-content">
-        <div class="tool switcher">
+        <div class="tool switcher" id = "tool">
             <li id="paint_bucket" class="tool-item paint_bucket"><img class="tool_image" src="images/3e638223c6b299f4739a344595d500b5.svg">Paint bucket</li>
             <li id="choose_color" class="tool-item choose_color"><img class="tool_image" src="images/06feb93a634d5deb09983efb3ad080c1.svg">Choose color</li>
             <li id="pencil" class="tool-item pencil"><img class="tool_image" src="images/7313c4c0c3cd443a48b23621207fe0e6.svg">Pencil</li>
             <li id="transform" class="tool-item transform"><img class="tool_image" src="images/9216500c8b873fa88d9a0dd18e259d8e.svg">Transform</li>
         </div>        
-        <div class="color switcher">
-            <div class="color-item color_backgr-input">
+        <div id = "color" class="color switcher">
+            <div class="color-item color_background-input">
                  <input id="input_color" type="color" value="#008000">
                  <label for="input_color">Current colors</label>
             </div>
-            <div class="color-item color_backgr-prev" id="color_backgr-prev">
+            <div class="color-item color_background-prev">
                 <div id="color_pref"></div>
-                <div id="color-pref_text">Prev color</div>
+                <div id="color_pref_text">Prev color</div>
             </div>
-            <div class="color-item color_backgr-red">
+            <div class="color-item color_background-red">
                 <div id="color_red"></div>
-                <div id="color-red_text">Red</div>
+                <div id="color_red_text">Red</div>
             </div>
-            <div  class="color-item color_backgr-bleu">
+            <div  class="color-item color_background-bleu">
                 <div id="color_bleu"></div>
-                <div id="color-bleu_text">Blue</div>
+                <div id="color_bleu_text">Blue</div>
             </div>
         </div>
-        <form name="formCheck" class="size switcher">
+        <form name="formCheck" class="size switcher" id="size">
             <div><input type="radio" name="visible" value="1" class="checkbox_visible"/><b>128x128</b></div>
             <div><input type="radio" name="visible" value="2" class="checkbox_visible"/><b>256x256</b></div>
             <div><input type="radio" checked name="visible" value="3" class="checkbox_visible"/><b>512x512</b></div>     
